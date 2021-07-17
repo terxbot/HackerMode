@@ -4,51 +4,38 @@ import os
 import sys
 import time
 import zlib
+import base64
 import marshal
 from uncompyle6 import PYTHON_VERSION
-from uncompyle6.main import decompile
+from uncompyle6.main import decompile, decompile_file
 
 ENCODEING = "utf-8"
 ALGORITHOMS = (
+    "base16",
+    "base32",
+    "base64",
+    "base85",
     "marshal",
     "zlib",
+    "pyc"
 )
 
 
 class CodeSearchAlgorithms:
     @staticmethod
-    def bytecode(string: str) -> bytes:
+    def bytecode(file_bytes: bytes) -> bytes:
         pattern: str = r"""(((b|bytes\()["'])(.+)(["']))"""
-        string_data = re.findall(pattern, string)[0][3]
+        string_data = re.findall(pattern, file_bytes.decode(ENCODEING))[0][3]
         return eval(f"b'{string_data}'")
-
-    @staticmethod
-    def eval_filter(string: str) -> str:
-        pattern: str = r"(eval(?:[\s]+)?\()"
-        if len(eval_pos := re.findall(pattern, string)) < 0:
-            return string
-
-        eval_body: str = string[string.find(eval_pos[0]):string.find(eval_pos[0]) + len(eval_pos[0])]
-        open_brackets: int = 1
-
-        for _chr in string[string.find(eval_pos[0]) + len(eval_pos[0]):]:
-            if _chr == "(":
-                open_brackets += 1
-            elif _chr == ")":
-                open_brackets -= 1
-            eval_body += _chr
-            if open_brackets == 0:
-                break
-        return string.replace(eval_body, eval(eval_body[len(eval_pos[0]):-1]))
 
 
 class DecodingAlgorithms:
-    def __init__(self, string, save_file):
-        self.string = string
+    def __init__(self, file_bytes: bytes, save_file: str):
+        self.file_bytes = file_bytes
         print("Finding the best algorithm:")
         for algogithom in ALGORITHOMS:
             try:
-                self.string = self.__getattribute__(algogithom)()
+                self.file_bytes = self.__getattribute__(algogithom)()
                 print(f"# \033[1;32m{algogithom} ✓\033[0m", end="\r")
             except Exception:
                 print(f"# \033[1;31m{algogithom}\033[0m")
@@ -57,7 +44,7 @@ class DecodingAlgorithms:
             layers: int = 0
             while True:
                 try:
-                    self.string = self.__getattribute__(algogithom)()
+                    self.file_bytes = self.__getattribute__(algogithom)()
                     layers += 1
                     print(f"# \033[1;32m{algogithom} layers {layers} ✓\033[0m", end="\r")
                     time.sleep(.02)
@@ -66,26 +53,52 @@ class DecodingAlgorithms:
                     break
             break
 
-        with open(save_file, "w") as file:
-            file.write(self.string)
+        try:
+            with open(save_file, "w") as file:
+                file.write(self.file_bytes)
+        except Exception:
+            print("# \033[1;31mFailed to decode the file!\033[0m")
+
+    def base16(self) -> str:
+        return base64.b16decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
+
+    def base32(self) -> str:
+        return base64.b32decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
+
+    def base64(self) -> str:
+        return base64.b64decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
+
+    def base85(self) -> str:
+        return base64.b85decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
 
     def marshal(self) -> str:
-        bytecode = marshal.loads(CodeSearchAlgorithms.bytecode(self.string))
+        bytecode = marshal.loads(CodeSearchAlgorithms.bytecode(self.file_bytes))
         out = io.StringIO()
         version = PYTHON_VERSION if PYTHON_VERSION < 3.9 else 3.8
         decompile(version, bytecode, out, showast=False)
         return out.getvalue() + '\n'
 
     def zlib(self) -> str:
-        return zlib.decompress(CodeSearchAlgorithms.bytecode(self.string)).decode(encoding=ENCODEING)
+        return zlib.decompress(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
 
+    def pyc(self) -> str:
+        with open(sys.argv[2],"w") as f:
+            decompile_file(sys.argv[1], f)
+        with open(sys.argv[2],"r") as f:
+            data: str = f.read()
+        if data == self.file_bytes:
+            raise Exception()
+        return data
 
 if __name__ == '__main__':
+    sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/MFB.pyc")
+    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/__pycache__/converM.cpython-38.pyc")
+    sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/output.py")
     if len(sys.argv) > 2:
         if not os.path.isfile(sys.argv[1]):
             exit(f"# file not found!: {sys.argv[1]}")
-        with open(sys.argv[1], "r") as file:
-            data = file.read()
+        with open(sys.argv[1], "rb") as file:
+            data: bytes = file.read()
         DecodingAlgorithms(data, sys.argv[2])
     else:
         print("USAGE:\n decode file.py output.py")
