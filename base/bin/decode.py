@@ -60,7 +60,7 @@ class DecodingAlgorithms:
                     self.string = self.__getattribute__(algogithom)()
                     layers += 1
                     print(f"# \033[1;32m{algogithom} layers {layers} ✓\033[0m", end="\r")
-                    time.sleep(.1)
+                    time.sleep(.02)
                 except Exception:
                     print(f"\n# \033[1;32mDONE ✓\033[0m")
                     break
@@ -86,6 +86,6 @@ if __name__ == '__main__':
             exit(f"# file not found!: {sys.argv[1]}")
         with open(sys.argv[1], "r") as file:
             data = file.read()
-        DecodingAlgorithms(data, "/home/psh-team/Downloads/Telegram Desktop/output.py")
+        DecodingAlgorithms(data, sys.argv[2])
     else:
         print("USAGE:\n decode file.py output.py")
