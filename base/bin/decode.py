@@ -28,6 +28,11 @@ class CodeSearchAlgorithms:
         string_data = re.findall(pattern, file_bytes.decode(ENCODEING))[0][3]
         return eval(f"b'{string_data}'")
 
+    @staticmethod
+    def base64_hash(file_bytes: bytes) -> str:
+        pattern: str = r"""((?:(?:b|bytes\()?["'])([a-zA-Z0-9\=]+)(?:["']))"""
+        return re.findall(pattern, file_bytes.decode(ENCODEING))[0][1]
+
 
 class DecodingAlgorithms:
     def __init__(self, file_bytes: bytes, save_file: str):
@@ -60,16 +65,16 @@ class DecodingAlgorithms:
             print("# \033[1;31mFailed to decode the file!\033[0m")
 
     def base16(self) -> str:
-        return base64.b16decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
+        return base64.b16decode(CodeSearchAlgorithms.base64_hash(self.file_bytes)).decode(ENCODEING)
 
     def base32(self) -> str:
-        return base64.b32decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
+        return base64.b32decode(CodeSearchAlgorithms.base64_hash(self.file_bytes)).decode(ENCODEING)
 
     def base64(self) -> str:
-        return base64.b64decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
+        return base64.b64decode(CodeSearchAlgorithms.base64_hash(self.file_bytes)).decode(ENCODEING)
 
     def base85(self) -> str:
-        return base64.b85decode(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
+        return base64.b85decode(CodeSearchAlgorithms.base64_hash(self.file_bytes)).decode(ENCODEING)
 
     def marshal(self) -> str:
         bytecode = marshal.loads(CodeSearchAlgorithms.bytecode(self.file_bytes))
@@ -82,18 +87,20 @@ class DecodingAlgorithms:
         return zlib.decompress(CodeSearchAlgorithms.bytecode(self.file_bytes)).decode(ENCODEING)
 
     def pyc(self) -> str:
-        with open(sys.argv[2],"w") as f:
+        with open(sys.argv[2], "w") as f:
             decompile_file(sys.argv[1], f)
-        with open(sys.argv[2],"r") as f:
+        with open(sys.argv[2], "r") as f:
             data: str = f.read()
         if data == self.file_bytes:
             raise Exception()
         return data
 
+
 if __name__ == '__main__':
-    sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/MFB.pyc")
+    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/MFB.pyc")
     # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/__pycache__/converM.cpython-38.pyc")
-    sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/output.py")
+    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/converM.py")
+    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/output.py")
     if len(sys.argv) > 2:
         if not os.path.isfile(sys.argv[1]):
             exit(f"# file not found!: {sys.argv[1]}")
