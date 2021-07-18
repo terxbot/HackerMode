@@ -30,7 +30,7 @@ class CodeSearchAlgorithms:
 
     @staticmethod
     def base64_hash(file_bytes: bytes) -> str:
-        pattern: str = r"""((?:(?:b|bytes\()?["'])([a-zA-Z0-9\=]+)(?:["']))"""
+        pattern: str = r"""((?:(?:b|bytes\()?["'])([a-zA-Z0-9\=\+\/]+)(?:["']))"""
         return re.findall(pattern, file_bytes.decode(ENCODEING))[0][1]
 
 
