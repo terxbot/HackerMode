@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -131,9 +130,4 @@ dmypy.json
 
 # logs files and settings
 .idea/
-base/tools/aioc/scr/*
 
-base/tools/social-media/.dart_tool/package_config.json
-base/tools/social-media/.packages
-base/tools/social-media/dart_main.exe
-base/tools/social-media/pubspec.lock
