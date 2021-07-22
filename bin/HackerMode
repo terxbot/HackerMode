@@ -1,0 +1,35 @@
+#!/usr/bin/bash
+
+function update() {
+  echo ""
+}
+
+function upgrade() {
+  echo ""
+
+}
+
+function check() {
+  echo ""
+
+}
+
+function tools() {
+  local bin_tools=$(find $VIRTUAL_ENV/bin/ -type f -executable -print)
+  echo "# All HackerMode tools:"
+  for file in $bin_tools; do
+    echo "...$(basename $file)"
+  done
+}
+
+if [ "$1" == "update" ]; then
+  update
+elif [ "$1" == "upgrade" ]; then
+  upgrade
+elif [ "$1" == "check" ]; then
+  check
+elif [ "$1" == "tools" ]; then
+  tools
+else
+  echo "command: $1: not found in HackerMode arguments!"
+fi
