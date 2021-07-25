@@ -1,5 +1,4 @@
 import os
-import json
 import sys
 import bz2
 import zlib
