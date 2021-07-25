@@ -13,7 +13,6 @@ ENCRYPTION: list = [
     "binary",
     "bz2",
     "zlib",
-    "base64",
     "marshal",
     "pyc",
     "layers",
