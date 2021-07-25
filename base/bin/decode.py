@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import io
 import re
 import os
@@ -19,7 +20,9 @@ ALGORITHOMS = (
     "base32",
     "base64",
     "base85",
-    "machine_code"
+    "machine-code",
+    "eval-filter",
+    "string-filter",
 )
 
 
@@ -36,6 +39,34 @@ class CodeSearchAlgorithms:
         string_data = re.findall(pattern, string)[0][1]
         return string_data
 
+    @staticmethod
+    def eval_filter(string: str):
+        pattern: str = r"(eval(?:[\s]+)?\()"
+        if len(eval_poss := re.findall(pattern, string)) < 0:
+            raise Exception()
+        for eval_pos in eval_poss:
+            eval_function: str = string[string.find(eval_pos):string.find(eval_pos) + len(eval_pos)]
+            open_brackets: int = 1
+
+            for _chr in string[string.find(eval_pos) + len(eval_pos):]:
+                if _chr == "(":
+                    open_brackets += 1
+                elif _chr == ")":
+                    open_brackets -= 1
+                eval_function += _chr
+                if open_brackets == 0:
+                    break
+            string = string[string.find(eval_function) + len(eval_function):]
+            yield eval_function
+
+    @staticmethod
+    def string_filter(string: str):
+        pattern = r"""(["'](?:\\[\w0-9]+)+["'])"""
+        if len(strings := re.findall(pattern, string)) < 0:
+            raise Exception()
+        for _str in strings:
+            yield _str
+
 
 class DecodingAlgorithms:
     def __init__(self, file_data, save_file):
@@ -43,10 +74,14 @@ class DecodingAlgorithms:
         print("Finding the best algorithm:")
         for algogithom in ALGORITHOMS:
             try:
-                self.file_data = self.__getattribute__(algogithom)()
+                self.file_data = self.__getattribute__(algogithom.replace("-", "_"))()
                 print(f"# \033[1;32m{algogithom} ✓\033[0m", end="\r")
             except Exception:
                 print(f"# \033[1;31m{algogithom}\033[0m")
+                continue
+
+            if "filter" in algogithom:
+                print("")
                 continue
 
             layers: int = 0
@@ -107,15 +142,54 @@ class DecodingAlgorithms:
             raise Exception()
         return data
 
+    def eval_filter(self) -> str:
+        all_eval_functions = list(set(list(CodeSearchAlgorithms.eval_filter(self.file_data))))
+        for func in all_eval_functions:
+            if not func.strip():
+                all_eval_functions.remove(func)
+
+        exceptions = 0
+        for eval_f in all_eval_functions:
+            try:
+                eval_body = re.findall(r"\((.+)\)", eval_f)[0]
+                bad_functions = ["eval", "exec"]
+                is_in = False
+                for function in bad_functions:
+                    if function in eval_body:
+                        is_in = True
+                if is_in:
+                    exceptions += 1
+                    continue
+            except IndexError:
+                continue
+
+            try:
+                try:
+                    eval_data = eval(f"b{eval_body}").decode(ENCODEING)
+                except Exception:
+                    eval_data = eval(eval_body)
+                self.file_data = self.file_data.replace(eval_f, eval_data)
+            except Exception:
+                exceptions += 1
+        if exceptions == len(all_eval_functions):
+            raise Exception()
+        return self.file_data
+
+    def string_filter(self) -> str:
+        all_strings = list(set(list(CodeSearchAlgorithms.string_filter(self.file_data))))
+        exceptions = 0
+        for _str in all_strings:
+            try:
+                self.file_data = self.file_data.replace(_str, f"'{eval(_str)}'")
+            except Exception as f:
+                print(f)
+                exceptions += 1
+        if exceptions == len(all_strings):
+            raise Exception()
+        return self.file_data
+
 
 if __name__ == '__main__':
-    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/converM.py")
-    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/newfile(1)-marshal.py")
-    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/Kai-Hash.py")
-    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/__pycache__/converM.cpython-38.pyc")
-    # sys.argv.append("/home/psh-team/Documents/GitHub/HackerMode/venv/lib/python3.8/site-packages/bidi/__pycache__/__init__.cpython-38.pyc")
-    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/lambdaa.pyc")
-    # sys.argv.append("/home/psh-team/Downloads/Telegram Desktop/output.py")
     if len(sys.argv) > 2:
         if not os.path.isfile(sys.argv[1]):
             exit(f"# file not found!: {sys.argv[1]}")
