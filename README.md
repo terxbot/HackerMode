@@ -6,7 +6,7 @@ ___
 
 <div id="support"></div>
 
-### Support:
+### Supported Systems:
 - kali
 - ubuntu
 - termux
@@ -16,7 +16,7 @@ ___
 
 <div id="install"></div>
 
-### Install:
+### Installation:
 - kali & ubuntu
 ```shell
 # Install tool packags
@@ -57,5 +57,5 @@ $ HackerMode check
 
 # to update HackerMode and packages
 $ HackerMode update
-$ HackerMode upgread
+$ HackerMode upgrade
 ```
