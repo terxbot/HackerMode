@@ -1,45 +1,65 @@
+#!/usr/bin/python3 -B
 import os
-size=os.path
 import sys
-from N4Tools.Design import ThreadAnimation,AnimationTools,Animation
+import time
+from threading import Thread
+
+BIT: int = 1024
+SIZES: tuple = (
+    "KB",
+    "MB",
+    "GB",
+    "TB",
+    "PB",
+    "EB",
+    "ZB",
+    "YB"
+)
+
 class Size:
-    def __init__(self,namefile):
-        self.namefile=namefile
-    def sizenumFile(self):
-        return[os.path.getsize(self.namefile),self.namefile]
-    def sizenumDir(self):
-        if os.path.isfile(self.namefile):return self.sizenumFile()
-        elif os.path.isdir(self.namefile):
-            s=0
-            for d,i,r in  os.walk(self.namefile):
-                for n in r:s+=os.path.getsize(os.path.join(d,n))
-            return[s,self.namefile]
-            
-    def GetSize(self):
-        F=self.sizenumDir()
-        s=F[0]
-        G=s/1024
-        S='kB'
-        if G>1024:
-            G=G/1024
-            S='MB'
-            if G>1024:
-                G=G/1024
-                S='GB'
-        G=str(G).split('.')
-        return f'{F[1]} : \033[94m{G[0]}.{G[1][0:2]} {S}'
 
-text_anim = AnimationTools.set_text_anim('Calculating the size...')
-AN = Animation()
-kwargs = (lambda **kwargs:kwargs)(text=text_anim)
-@ThreadAnimation(Animation=AN.Loading,kwargs=kwargs)
-def App(Thread):
-	out=[]
-	for p in sys.argv[1:]:
-	    try:
-	   	 out.append(f"\033[93m{Size(p).GetSize()}\033[0m")
-	    except:out.append(f"[Errno 2] No such file or directory: '{os.path.join('/',*__file__.split('/')[:-1],p)}")
-	Thread.kill()
-	print('\n'.join(out))
+    def __init__(self, path: str, anim: bool=True) -> None:
+        self._isdone = False
+        if anim: self.anim
+        self.size = self.model_size(self.num_size(path))
 
-App()
+    @property
+    def anim(self) -> None:
+        text =  "Calculating the size..."
+        def _anim() -> None:
+            while not self._isdone:
+                for x in range(len(text)):
+                    if self._isdone:
+                        break
+                    print(f'\r{text[:x]}{text[x].upper()}{text[x+1:]}', end="")
+                    time.sleep(0.2)
+        Thread(target=_anim).start()
+
+
+    def num_size(self, path: str) -> int:
+        return os.path.getsize(path) if os.path.isfile(path) else sum(
+            os.path.getsize(os.path.join(p, file))
+            for p, d, f in os.walk(path)
+            for file in f
+        )
+
+    def model_size(self, size: int, color: bool=True) -> str:
+        for x in range(len(SIZES)):
+            _x = x+1
+            if (_size := eval("("*_x + str(size) + "".join([f"/{BIT})"]*_x))) < BIT:
+                _size = str(_size).split(".")
+                _size = f"\x1b[0;36m{_size[0]}.{_size[1][0:2]} \x1b[0;32m{SIZES[x]}\x1b[0m" if color else f"{_size[0]}.{_size[1][0:2]} {SIZES[x]}"
+                break
+        self._isdone = True # close animation
+        print("\r                       ", end='\r')
+        return _size
+
+if __name__ == "__main__":
+    argv = sys.argv[1:]
+    for p in argv:
+        if os.path.exists(p):
+            c = "\x1b[0;34m" if os.path.isdir(p) else "\x1b[0;33m"
+            s = p.split('/')
+            print(f"\x1b[0;34m{'/'.join(s[:-1])}/{c}{s[-1]}\x1b[0;31m: {Size(p).size}")
+            continue
+        print(f"# Not File or Directory '{p}'")
