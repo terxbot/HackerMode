@@ -2,8 +2,11 @@
 - [Support](#support)
 - [Install](#install)
 - [Docs](#docs)
-___
 
+### Coded by PSH-TEAM
+- [telegram](https://t.me/psh_team)
+- [youtube](https://www.youtube.com/channel/UCRFNcuHk3I_1g6PBaBxj9qQ)
+___
 <div id="support"></div>
 
 ### Supported Systems:
