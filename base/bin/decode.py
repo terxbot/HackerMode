@@ -24,20 +24,26 @@ ALGORITHOMS = (
     "eval-filter",
     "string-filter",
 )
+COPYRIGHT = """
+# Decoded by HackerMode tool...
+# Copyright: PSH-TEAM
+# Follow us on telegram ( @psh_team )
+""".lstrip()
 
 
 class CodeSearchAlgorithms:
     @staticmethod
     def bytecode(string: str) -> bytes:
         pattern: str = r"""(((b|bytes\()["'])(.+)(["']))"""
-        string_data = re.findall(pattern, string)[0][3]
+        length: int = 0
+        string_data: str = ""
+        for string in re.findall(pattern, string):
+            if len(string[3]) > length:
+                length = len(string[3])
+                string_data = string[3]
+        if not string_data:
+            raise Exception()
         return eval(f"b'{string_data}'")
-
-    @staticmethod
-    def base64_hash(string: str) -> str:
-        pattern: str = r"""((?:(?:b|bytes\()?["'])([a-zA-Z0-9\=\+\/]+)(?:["']))"""
-        string_data = re.findall(pattern, string)[0][1]
-        return string_data
 
     @staticmethod
     def eval_filter(string: str):
@@ -97,7 +103,8 @@ class DecodingAlgorithms:
             break
         try:
             with open(save_file, "w") as file:
-                file.write(self.file_data)
+
+                file.write(COPYRIGHT+self.file_data)
         except Exception:
             print("# \033[1;31mFailed to decode the file!\033[0m")
 
@@ -106,7 +113,7 @@ class DecodingAlgorithms:
         out = io.StringIO()
         version = PYTHON_VERSION if PYTHON_VERSION < 3.9 else 3.8
         decompile(version, bytecode, out, showast=False)
-        return out.getvalue() + '\n'
+        return "\n".join(out.getvalue().split("\n")[5:]) + '\n'
 
     def zlib(self) -> str:
         return zlib.decompress(
@@ -115,22 +122,22 @@ class DecodingAlgorithms:
 
     def base16(self) -> str:
         return base64.b16decode(
-            CodeSearchAlgorithms.base64_hash(self.file_data)
+            CodeSearchAlgorithms.bytecode(self.file_data)
         ).decode(ENCODEING)
 
     def base32(self) -> str:
         return base64.b32decode(
-            CodeSearchAlgorithms.base64_hash(self.file_data)
+            CodeSearchAlgorithms.bytecode(self.file_data)
         ).decode(ENCODEING)
 
     def base64(self) -> str:
         return base64.b64decode(
-            CodeSearchAlgorithms.base64_hash(self.file_data)
+            CodeSearchAlgorithms.bytecode(self.file_data)
         ).decode(ENCODEING)
 
     def base85(self) -> str:
         return base64.b85decode(
-            CodeSearchAlgorithms.base64_hash(self.file_data)
+            CodeSearchAlgorithms.bytecode(self.file_data)
         ).decode(ENCODEING)
 
     def machine_code(self) -> str:
@@ -181,8 +188,7 @@ class DecodingAlgorithms:
         for _str in all_strings:
             try:
                 self.file_data = self.file_data.replace(_str, f"'{eval(_str)}'")
-            except Exception as f:
-                print(f)
+            except Exception:
                 exceptions += 1
         if exceptions == len(all_strings):
             raise Exception()
