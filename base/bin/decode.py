@@ -113,7 +113,7 @@ class DecodingAlgorithms:
         out = io.StringIO()
         version = PYTHON_VERSION if PYTHON_VERSION < 3.9 else 3.8
         decompile(version, bytecode, out, showast=False)
-        return "\n".join(out.getvalue().split("\n")[5:]) + '\n'
+        return "\n".join(out.getvalue().split("\n")[4:]) + '\n'
 
     def zlib(self) -> str:
         return zlib.decompress(
