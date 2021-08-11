@@ -6,8 +6,8 @@ from base.config import Config
 
 PACKAGES = {
     'apt': {
-        'termux':['apt --fix-broken install'],
-        'linux':['sudo apt --fix-broken install'],
+        'termux': ['apt --fix-broken install'],
+        'linux': ['sudo apt --fix-broken install'],
     },
     # -----------------------------------
     'pip3': {
@@ -45,12 +45,6 @@ PACKAGES = {
             "sudo apt-get update",
             "sudo apt-get install dart",
         ],
-    },
-    # -----------------------------------
-    'redshift':{
-        'termux': [],
-        'linux': ['sudo apt install redshift'],
-
     }
 }
 
@@ -172,10 +166,6 @@ class Installer:
             print(f'# {RED}Error:{NORMAL} some of the basics package not installed!')
             return
 
-        if Config.get('actions', 'DEBUG', cast=bool, default=True):
-            print('# In DEBUG mode can"t move the tool\n# to "System.TOOL_PATH"!')
-            return
-
         if os.path.isdir(System.TOOL_NAME):
             HackerMode = '#!/usr/bin/python3\n'
             HackerMode += 'import sys,os\n'
@@ -193,7 +183,16 @@ class Installer:
                 return
             Config.set('actions', 'IS_INSTALLED', True)
             try:
+                shutil.rmtree(System.TOOL_PATH)
                 shutil.move(System.TOOL_NAME, System.TOOL_PATH)
+                try:
+                    with open(System.BASHRIC_FILE_PATH, "r") as f:
+                        data = f.read()
+                    if data.find(System.HACKERMODE_SHORTCUT.strip()) != -1:
+                        with open(System.BASHRIC_FILE_PATH, "w") as f:
+                            f.write(data.replace(System.HACKERMODE_SHORTCUT.strip(), ""))
+                except PermissionError:
+                    print("# cannot remove HackerMode shortcut!")
                 print(f'# {GREEN}HackerMode installed successfully...{NORMAL}')
             except shutil.Error as e:
                 print(e)
@@ -213,7 +212,7 @@ class Installer:
         for package in PACKAGES.keys():
             if not PACKAGES[package][System.PLATFORME]:
                 continue
-            if package in System.SYSTEM_PACKAGES:
+            if os.popen(f'which {package}').read():
                 print(self.InstalledMsg(package))
                 if package in BASE_PACKAGES:
                     self.InstalledSuccessfully['base'].append(True)

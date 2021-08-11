@@ -17,13 +17,31 @@ class System:
         self.HACKERMODE_PACKAGES = self.HACKERMODE_PACKAGES()
 
     @property
+    def BASHRIC_FILE_PATH(self):
+        if (shell := os.environ.get('SHELL')):
+            if shell.endswith("bash"):
+                path = os.path.join(shell.split("/bin/")[0], "etc/bash.bashrc")
+                if not os.path.exists(path):
+                    path = "/etc/bash.bashrc"
+            elif shell.endswith("zsh"):
+                path = os.path.join(shell.split("/bin/")[0], "etc/zsh/zshrc")
+                if not os.path.exists(path):
+                    path = "/etc/zsh/zshrc"
+        return path
+
+    @property
+    def HACKERMODE_SHORTCUT(self) -> str:
+        """HackerMode shortcut"""
+        return f"\nalias HackerMode='source {self.HACKERMODE_ACTIVATE_FILE_PATH}'"
+
+    @property
     def BIN_PATH(self) -> str:
         return ''.join(sys.executable.split('bin')[:-1]) + 'bin'
 
     @property
     def TOOL_PATH(self) -> str:
         '''To get the tool path'''
-        ToolPath = os.path.join(os.environ['HOME'],'.HackerMode')
+        ToolPath = os.path.join(os.environ['HOME'], '.HackerMode')
         if not os.path.isdir(ToolPath):
             os.mkdir(ToolPath)
         return ToolPath
@@ -52,11 +70,11 @@ class System:
     def HACKERMODE_PACKAGES(self) -> List[str]:
         HackerModePackages = lambda path: [
             a for a in os.listdir(
-                os.path.abspath(os.path.join(self.BASE_PATH,path)))
+                os.path.abspath(os.path.join(self.BASE_PATH, path)))
         ]
         packages: List[str] = []
         for file_name in HackerModePackages('bin'):
-            for ext in ['.c','.py','.sh','.dart','.java','.php','.js','.pyc','.cpp']:
+            for ext in ['.c', '.py', '.sh', '.dart', '.java', '.php', '.js', '.pyc', '.cpp']:
                 if file_name.endswith(ext):
                     packages.append(file_name[0:-len(ext)])
         for tool_name in HackerModePackages('tools'):
@@ -66,6 +84,7 @@ class System:
 
 
 System = System()
+
 
 class DataBase:
     config = {
@@ -81,52 +100,52 @@ class DataBase:
         self.firebase = pyrebase.initialize_app(self.config)
         self.auth = self.firebase.auth()
 
-    def sign_in(self,email,password):
+    def sign_in(self, email, password):
         try:
-            user = self.auth.sign_in_with_email_and_password(email,password)
+            user = self.auth.sign_in_with_email_and_password(email, password)
             return {
-                'status_code':200,
-                'data':user,
+                'status_code': 200,
+                'data': user,
             }
         except self.requests.exceptions.HTTPError as e:
             return {
-                'status_code':400,
-                'data':json.loads(e.strerror)
+                'status_code': 400,
+                'data': json.loads(e.strerror)
             }
 
-    def sign_up(self,email,password,repeat_password):
+    def sign_up(self, email, password, repeat_password):
         if password != repeat_password:
             return {
                 'status_code': 400,
                 'data': {
-                    'error':{
-                        'message':'PASSWORD_ERROR'
+                    'error': {
+                        'message': 'PASSWORD_ERROR'
                     }
                 }
             }
         try:
-            user = self.auth.create_user_with_email_and_password(email,password)
+            user = self.auth.create_user_with_email_and_password(email, password)
             return {
-                'status_code':200,
-                'data':user,
+                'status_code': 200,
+                'data': user,
             }
         except self.requests.exceptions.HTTPError as e:
             return {
-                'status_code':400,
-                'data':json.loads(e.strerror)
+                'status_code': 400,
+                'data': json.loads(e.strerror)
             }
 
-    def send_email_verification(self,token):
-        if (data:=self.auth.get_account_info(token)).get('users')[0].get('emailVerified'):
-           return {
-                'status_code':200,
-                'data':data
+    def send_email_verification(self, token):
+        if (data := self.auth.get_account_info(token)).get('users')[0].get('emailVerified'):
+            return {
+                'status_code': 200,
+                'data': data
             }
         try:
             self.auth.send_email_verification(token)
             return {
-                'status_code':200,
-                'data':self.auth.get_account_info(token)
+                'status_code': 200,
+                'data': self.auth.get_account_info(token)
             }
         except self.requests.exceptions.HTTPError as e:
             return {
