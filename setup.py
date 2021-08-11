@@ -166,7 +166,7 @@ class Installer:
             print(f'# {RED}Error:{NORMAL} some of the basics package not installed!')
             return
 
-        if os.system(f"mv HackerMode/HackerMode {os.environ.get('_').split('bin/')[0] + 'bin/'}") != 0:
+        if os.system(f"{'sudo ' if System.PLATFORM != 'termux' else ' '}mv HackerMode/HackerMode {os.environ.get('_').split('bin/')[0] + 'bin/'}") != 0:
             print('# installed failed!')
             return
         Config.set('actions', 'IS_INSTALLED', True)
