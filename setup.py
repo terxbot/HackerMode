@@ -166,40 +166,24 @@ class Installer:
             print(f'# {RED}Error:{NORMAL} some of the basics package not installed!')
             return
 
-        if os.path.isdir(System.TOOL_NAME):
-            HackerMode = '#!/usr/bin/python3\n'
-            HackerMode += 'import sys,os\n'
-            HackerMode += f'path=os.path.join("{System.TOOL_PATH}","{System.TOOL_NAME}")\n'
-            HackerMode += "try:os.system(f'python3 -B {path} '+' '.join(sys.argv[1:]))\n"
-            HackerMode += "except:pass"
+        if os.system(f"mv HackerMode/HackerMode {os.environ.get('_').split('bin/')[0] + 'bin/'}") != 0:
+            print('# installed failed!')
+            return
+        Config.set('actions', 'IS_INSTALLED', True)
+        try:
+            shutil.rmtree(System.TOOL_PATH)
+            shutil.move(System.TOOL_NAME, System.TOOL_PATH)
             try:
-                with open(os.path.join(System.BIN_PATH, System.TOOL_NAME), 'w') as f:
-                    f.write(HackerMode)
-                chmod = 'chmod' if System.PLATFORME == 'termux' else 'sudo chmod'
-                os.system(f'{chmod} 777 {os.path.join(System.BIN_PATH, System.TOOL_NAME)}')
-            except Exception as e:
-                print(e)
-                print('# installed failed!')
-                return
-            Config.set('actions', 'IS_INSTALLED', True)
-            try:
-                shutil.rmtree(System.TOOL_PATH)
-                shutil.move(System.TOOL_NAME, System.TOOL_PATH)
-                try:
-                    with open(System.BASHRIC_FILE_PATH, "r") as f:
-                        data = f.read()
-                    if data.find(System.HACKERMODE_SHORTCUT.strip()) != -1:
-                        with open(System.BASHRIC_FILE_PATH, "w") as f:
-                            f.write(data.replace(System.HACKERMODE_SHORTCUT.strip(), ""))
-                except PermissionError:
-                    print("# cannot remove HackerMode shortcut!")
-                print(f'# {GREEN}HackerMode installed successfully...{NORMAL}')
-            except shutil.Error as e:
-                print(e)
-                print('# installed failed!')
-        else:
-            print(f'{RED}# Error: the tool path not found!')
-            print(f'# try to run tool using\n# {GREEN}"python3 HackerMode install"{NORMAL}')
+                with open(System.BASHRIC_FILE_PATH, "r") as f:
+                    data = f.read()
+                if data.find(System.HACKERMODE_SHORTCUT.strip()) != -1:
+                    with open(System.BASHRIC_FILE_PATH, "w") as f:
+                        f.write(data.replace(System.HACKERMODE_SHORTCUT.strip(), ""))
+            except PermissionError:
+                print("# cannot remove HackerMode shortcut!")
+            print(f'# {GREEN}HackerMode installed successfully...{NORMAL}')
+        except shutil.Error as e:
+            print(e)
             print('# installed failed!')
 
     def check(self):
