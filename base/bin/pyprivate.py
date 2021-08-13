@@ -36,7 +36,7 @@ class PyPrivate:
                             self.source = f.read()
                         print(f'\x1b[0;36m# encode \x1b[0;33m{self.tmp}')
                         code = RUNPY + b'\n' + self.getattribute(model)()
-                        if model == "compile": continue
+                        if model == "pyc": continue
                         with open(self.tmp, "wb") as f:
                             f.write(code)
                         
@@ -45,7 +45,7 @@ class PyPrivate:
             self.source = f.read()
         print(f'\x1b[0;36m# encode \x1b[0;33m{self.tmp}')
         code = RUNPY + b'\n' + self.getattribute(model)()
-        if model == "compile": return
+        if model == "pyc": return
         with open(path, "wb") as f:
             f.write(code)
 
