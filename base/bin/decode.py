@@ -33,8 +33,8 @@ ALGORITHOMS = (
 )
 COPYRIGHT = """
 # Decoded by HackerMode tool...
-# Copyright: PSH-TEAM
-# Follow us on telegram ( @psh_team )
+# Copyright: Python-Tools
+# Follow us on telegram ( @FFKK4 )
 """.lstrip()
 
 
