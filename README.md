@@ -20,30 +20,8 @@ ___
 <div id="install"></div>
 
 ### Installation:
-- kali & ubuntu
 ```shell
-# Install tool packags
-$ sudo apt install python3
-$ sudo apt install git
-$ sudo apt install python3-pip
-
-# Download tool
-$ git clone https://github.com/Arab-developers/HackerMode
-
-# Install
-$ sudo python3 -B HackerMode/ install
-```
-- termux
-```shell
-# Install tool packags
-$ pkg install python
-$ pkg install git
-
-# Download tool
-$ git clone https://github.com/Arab-developers/HackerMode
-
-# Install
-$ python3 -B HackerMode/ install
+curl https://raw.githubusercontent.com/Arab-developers/HackerMode/future/install.sh > HackerModeInstall && source HackerModeInstall
 ```
 <div id="docs"></div>
 

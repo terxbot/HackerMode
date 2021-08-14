@@ -17,7 +17,8 @@ class HackerMode:
             for argv in argv[1:]:
                 try:
                     getattr(self, argv)()
-                except AttributeError:
+                except AttributeError as e:
+                    print(e)
                     print('help msg')
         else:
             from base.shell import MainShell

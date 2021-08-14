@@ -56,7 +56,6 @@ PYHTON_MODULES = {
     'python-bidi': 'bidi',
     'arabic_reshaper': 'arabic_reshaper',
     'bs4': 'bs4',
-    'pyrebase': 'pyrebase',
     'pygments': 'pygments',
     'python-nmap': 'nmap',
     'requests': 'requests',
@@ -102,7 +101,7 @@ class Installer:
 
     def installer(self):
         '''Install all HackerMode packages and modules'''
-
+        return None
         # Install the basics packages:
         for PACKAGE_NAME, SETUP in PACKAGES.items():
             for COMMANDS in SETUP[System.PLATFORME]:
@@ -166,7 +165,8 @@ class Installer:
             print(f'# {RED}Error:{NORMAL} some of the basics package not installed!')
             return
 
-        if os.system(f"{'sudo ' if System.PLATFORM != 'termux' else ' '}mv HackerMode/HackerMode {os.environ.get('_').split('bin/')[0] + 'bin/'}") != 0:
+        if os.system(
+                f"{'sudo ' if System.PLATFORME != 'termux' else ' '}cp {__file__.rsplit('/',1)[0]}/HackerMode {os.environ.get('_').split('bin/')[0] + 'bin/'}") != 0:
             print('# installed failed!')
             return
         Config.set('actions', 'IS_INSTALLED', True)

@@ -17,6 +17,11 @@ class System:
         self.HACKERMODE_PACKAGES = self.HACKERMODE_PACKAGES()
 
     @property
+    def HACKERMODE_ACTIVATE_FILE_PATH(self) -> str:
+        """To get HackerMode activate file"""
+        return os.path.join(self.TOOL_PATH, "HackerMode/bin/activate")
+
+    @property
     def BASHRIC_FILE_PATH(self):
         if (shell := os.environ.get('SHELL')):
             if shell.endswith("bash"):
@@ -84,71 +89,3 @@ class System:
 
 
 System = System()
-
-
-class DataBase:
-    config = {
-        "apiKey": "AIzaSyAlPn686R3pA4K1WrszyXbqME1O92kpcNA",
-        "authDomain": "hackermode-c542d.firebaseapp.com",
-        "databaseURL": "https://hackermode-c542d.firebaseapp.com",
-        "storageBucket": "hackermode-c542d.appspot.com"
-    }
-
-    def __init__(self):
-        import pyrebase, requests
-        self.requests = requests
-        self.firebase = pyrebase.initialize_app(self.config)
-        self.auth = self.firebase.auth()
-
-    def sign_in(self, email, password):
-        try:
-            user = self.auth.sign_in_with_email_and_password(email, password)
-            return {
-                'status_code': 200,
-                'data': user,
-            }
-        except self.requests.exceptions.HTTPError as e:
-            return {
-                'status_code': 400,
-                'data': json.loads(e.strerror)
-            }
-
-    def sign_up(self, email, password, repeat_password):
-        if password != repeat_password:
-            return {
-                'status_code': 400,
-                'data': {
-                    'error': {
-                        'message': 'PASSWORD_ERROR'
-                    }
-                }
-            }
-        try:
-            user = self.auth.create_user_with_email_and_password(email, password)
-            return {
-                'status_code': 200,
-                'data': user,
-            }
-        except self.requests.exceptions.HTTPError as e:
-            return {
-                'status_code': 400,
-                'data': json.loads(e.strerror)
-            }
-
-    def send_email_verification(self, token):
-        if (data := self.auth.get_account_info(token)).get('users')[0].get('emailVerified'):
-            return {
-                'status_code': 200,
-                'data': data
-            }
-        try:
-            self.auth.send_email_verification(token)
-            return {
-                'status_code': 200,
-                'data': self.auth.get_account_info(token)
-            }
-        except self.requests.exceptions.HTTPError as e:
-            return {
-                'status_code': 400,
-                'data': json.loads(e.strerror)
-            }
