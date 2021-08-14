@@ -101,7 +101,6 @@ class Installer:
 
     def installer(self):
         '''Install all HackerMode packages and modules'''
-        return None
         # Install the basics packages:
         for PACKAGE_NAME, SETUP in PACKAGES.items():
             for COMMANDS in SETUP[System.PLATFORME]:
