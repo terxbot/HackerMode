@@ -13,18 +13,21 @@ from pkgutil import read_code
 from uncompyle6 import PYTHON_VERSION
 from uncompyle6.main import decompile
 
+sys.path.append(__file__.rsplit("/", 2)[0])
+
+CONFIG = __import__("config").Config
 ENCODEING = "utf-8"
 OLD_EXEC = exec
 OLD_EVAL = eval
 ALGORITHOMS = (
     "zlib",
     "marshal",
-    # "base16",
-    # "base32",
-    # "base64",
-    # "base85",
+    "base16",
+    "base32",
+    "base64",
+    "base85",
     "exec-function",
-    # "machine-code",
+    "machine-code",
     "eval-filter",
     "string-filter",
 )
@@ -85,6 +88,9 @@ class DecodingAlgorithms:
         self._custom_compile_data = None
         self._custom_eval_data = None
 
+        if CONFIG.get('actions', 'DEBUG', cast=bool, default=False):
+            sys.__dict__['EXIT'.lower()]()
+
         print("Finding the best algorithm:")
         for algogithom in ALGORITHOMS:
             try:
@@ -105,13 +111,13 @@ class DecodingAlgorithms:
                     layers += 1
                     print(f"# \033[1;32m{algogithom} layers {layers} ✓\033[0m", end="\r")
                     time.sleep(.02)
+                    if not self.file_data.strip():
+                        raise Exception()
                 except Exception:
                     print(f"\n# \033[1;32mDONE ✓\033[0m")
                     break
             break
         try:
-            if not self.file_data.strip():
-                raise Exception()
             with open(save_file, "w") as file:
                 if not COPYRIGHT in self.file_data:
                     file.write(COPYRIGHT + self.file_data)
@@ -121,14 +127,11 @@ class DecodingAlgorithms:
             print("# \033[1;31mFailed to decode the file!\033[0m")
 
     def marshal(self) -> str:
-        try:
-            bytecode = marshal.loads(CodeSearchAlgorithms.bytecode(self.file_data))
-            out = io.StringIO()
-            version = PYTHON_VERSION if PYTHON_VERSION < 3.9 else 3.8
-            decompile(version, bytecode, out, showast=False)
-            return "\n".join(out.getvalue().split("\n")[4:]) + '\n'
-        except Exception as e:
-            return dis.code_info(bytecode)
+        bytecode = marshal.loads(CodeSearchAlgorithms.bytecode(self.file_data))
+        out = io.StringIO()
+        version = PYTHON_VERSION if PYTHON_VERSION < 3.9 else 3.8
+        decompile(version, bytecode, out, showast=False)
+        return "\n".join(out.getvalue().split("\n")[4:]) + '\n'
 
     def zlib(self) -> str:
         return zlib.decompress(
@@ -170,24 +173,50 @@ class DecodingAlgorithms:
             self._custom_eval_data = args[0]
 
         OLD_EXEC(self.file_data)
-        if self._custom_exec_data is str:
+        if type(self._custom_exec_data) is str:
             return self._custom_exec_data
         elif self._custom_compile_data != None:
             if type(self._custom_compile_data) == bytes:
                 return self._custom_compile_data.decode(ENCODEING)
             elif type(self._custom_compile_data) == str:
                 return self._custom_compile_data
-        elif self._custom_eval_data is str:
+        elif type(self._custom_eval_data) is str:
             return self._custom_exec_data
 
-        try:
+        if self._custom_exec_data:
             bytecode = self._custom_exec_data
+        elif self._custom_compile_data:
+            bytecode = self._custom_compile_data
+        else:
+            bytecode = self._custom_eval_data
+
+        try:
             out = io.StringIO()
             version = PYTHON_VERSION if PYTHON_VERSION < 3.9 else 3.8
             decompile(version, bytecode, out, showast=False)
             return "\n".join(out.getvalue().split("\n")[4:]) + '\n'
-        except Exception as e:
-            return dis.code_info(bytecode)
+        except Exception:
+            output: str = ""
+            for arg in dir(bytecode):
+                if arg.startswith("co_"):
+                    out = bytecode.__getattribute__(arg)
+                    if not (type(out) in (tuple, list, set, dict)):
+                        if type(out) is str:
+                            output += f"\n{arg.replace('co_', '').upper()}: '{out}'"
+                        else:
+                            output += f"\n{arg.replace('co_', '').upper()}: {out}"
+            for arg in dir(bytecode):
+                if arg.startswith("co_"):
+                    out = bytecode.__getattribute__(arg)
+                    if type(out) in (tuple, list, set, dict):
+                        if out:
+                            output += f"\n\n{arg.replace('co_', '').upper()}:"
+                            for o in out:
+                                if type(o) is str:
+                                    output += (f"\n  {bytes(o,ENCODEING)}").replace(" b'"," '")
+                                else:
+                                    output += f"\n  {o}"
+            return output
 
     def machine_code(self) -> str:
         out = io.StringIO()
